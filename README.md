@@ -21,9 +21,11 @@ HTML5 semántico + CSS propio + JavaScript nativo. **Cero dependencias, cero bui
 │   │                             efectos premium, lightbox y renderizado diferido)
 │   └── fonts.css                 @font-face autoalojados (subset latin, font-display: swap)
 ├── js/
-│   └── main.js                   Header con scroll, menú móvil, reveal, formulario,
-│                                 partículas del hero, lightbox de fotos y efectos
-│                                 premium (parallax, tilt, magnético, progreso)
+│   ├── main.js                   Header con scroll, menú móvil, reveal, formulario,
+│   │                             partículas del hero, lightbox de fotos y efectos
+│   │                             premium (parallax, tilt, magnético, progreso)
+│   └── chatbot.js                Chat de soporte flotante (base de conocimiento
+│                                 en JS + respuestas rápidas) · solo en index.html
 └── assets/
     ├── Log_fondo_negro.png       Logo con fondo negro (footer, fondos #000)
     ├── Log_transparente.png      Logo sin fondo (secciones oscuras)
@@ -79,13 +81,13 @@ git push -u origin main
 | Cambio | Efecto |
 |---|---|
 | **Fuentes autoalojadas** (`css/fonts.css` + `assets/fonts/`, subset latin) | Elimina la cadena render-blocking `fonts.googleapis.com → fonts.gstatic.com` (Lighthouse estimaba ~1,3 s en 4G). `preload` de las dos familias base |
-| **`font-display: optional`** en las `@font-face` | Sin *swap* tardío: la tipografía se pinta desde el primer fotograma y **el CLS del hero baja de 0,301 a 0** (escritorio). En escritorio el prototipo pasa de 54 a 74 y el TBT de 1,14 s a 0,65 s |
+| **`font-display: swap`** en las `@font-face` | El texto nunca aparece en blanco mientras cargan las woff2 (si no, el navegador espera ~100 ms y pinta la tipografía del sistema) y las familias del cliente se ven **siempre**, aunque la conexión sea lenta. Se descartó `optional`, que en redes lentas dejaba la tipografía de sustitución de forma permanente |
 | **Entrada de los hero con `@keyframes`** | `.hero .reveal` y `.page-hero .reveal` arrancan con el CSS, sin esperar a `main.js` ni al `IntersectionObserver`: el título —elemento LCP— se pinta antes y la animación funciona aunque falle el script |
 | **Variantes ligeras con `srcset`/`sizes`** (48 ficheros `-450`/`-800`, ~16 KB) | Un móvil descarga ~450 px en lugar de 900 px: el peso medido por página baja de 659 KiB a ~450 KiB |
 | **`content-visibility: auto`** en `.section` (bloque 17 de `styles.css`) | Las secciones fuera del viewport no se renderizan hasta acercarse: el trabajo del hilo principal baja de ~7 s a ~4,4 s y el TBT de 1,46 s a 0,85 s (medido en emulación móvil) |
 | **Parallax sin reflow forzado** (`js/main.js`) | Las posiciones se leen **antes** de escribir ninguna y el efecto se desactiva en puntero táctil y en `prefers-reduced-motion`: desaparecen los 297 ms de reflow forzado que detectaba Lighthouse |
 | **Isotipo en WebP + favicon ligero** | El logo de cabecera pasa de 28 KB (PNG) a 6 KB (`Log_mark.webp`) y el favicon de 28 KB a 2,5 KB (`favicon.png` 48×48), en las 7 páginas |
-| **Compresión** | HTML 42 KB → 8,6 KB · CSS 54 KB → 12,4 KB con gzip (GitHub Pages lo hace igual) |
+| **Compresión** | HTML 45 KB → 9 KB · CSS 67 KB → 14 KB con gzip (GitHub Pages lo hace igual) |
 
 ### Resultados
 
@@ -99,26 +101,31 @@ dará en producción.
 
 | Página | Rend. | Acces. | Buenas prácticas | FCP | LCP | TBT | CLS | Velocidad | Peso |
 |---|---|---|---|---|---|---|---|---|---|
-| `index.html` | **64** | 100 | 100 | 1,1 s | 3,2 s | 2.470 ms | 0 | 2,7 s | 381 KiB |
-| `uniformes.html` | **82** | 100 | 100 | 1,2 s | 2,0 s | 680 ms | 0 | 1,4 s | 259 KiB |
-| `merch.html` | **79** | 100 | 100 | 0,9 s | 2,9 s | 640 ms | 0 | 1,2 s | 382 KiB |
-| `bordados.html` | **83** | 100 | 100 | 1,1 s | 2,0 s | 650 ms | 0 | 1,4 s | 349 KiB |
-| `articulos-personalizados.html` | **83** | 100 | 100 | 1,1 s | 2,0 s | 670 ms | 0 | 1,6 s | 219 KiB |
-| `nosotros.html` | **89** | 100 | 100 | 1,1 s | 1,8 s | 430 ms | 0 | 1,1 s | 230 KiB |
-| `contacto.html` | **88** | 100 | 100 | 1,1 s | 1,8 s | 450 ms | 0 | 1,3 s | 156 KiB |
+| `index.html` | **83** | 100 | 100 | 1,2 s | 3,2 s | 400 ms | 0 | 1,7 s | 389 KiB |
+| `uniformes.html` | **96** | 100 | 100 | 1,4 s | 2,2 s | 180 ms | 0 | 1,4 s | 261 KiB |
+| `merch.html` | **92** | 100 | 100 | 1,4 s | 2,9 s | 180 ms | 0 | 1,4 s | 385 KiB |
+| `bordados.html` | **94** | 100 | 100 | 1,4 s | 2,6 s | 160 ms | 0 | 1,4 s | 351 KiB |
+| `articulos-personalizados.html` | **99** | 100 | 100 | 1,4 s | 2,0 s | 70 ms | 0 | 1,4 s | 222 KiB |
+| `nosotros.html` | **99** | 100 | 100 | 1,4 s | 2,0 s | 50 ms | 0 | 1,4 s | 232 KiB |
+| `contacto.html` | **99** | 100 | 100 | 1,4 s | 2,0 s | 0 ms | 0 | 2,3 s | 159 KiB |
 
 **Escritorio** (`--preset=desktop`, sin estrangulamiento) — `index.html`:
-**79** de rendimiento · Accesibilidad 100 · Buenas prácticas 100 ·
-FCP **0,3 s** · LCP **0,7 s** · TBT 460 ms · CLS **0** · 290 KiB.
+**83** de rendimiento · Accesibilidad 100 · Buenas prácticas 100 ·
+FCP **0,4 s** · LCP **0,5 s** · TBT 376 ms · CLS **0** · 322 KiB.
 
 Notas:
 
 - **Accesibilidad y buenas prácticas: 100/100 y CLS 0 en las 7 páginas**, y
   **0 errores de consola, 0 respuestas 4xx/5xx y 0 imágenes rotas** en la
   verificación de las 7 rutas.
+- **El CLS se mantiene en 0 con `font-display: swap`**: el preload de las woff2
+  más la entrada del hero con `@keyframes` (sin esperar a JS) evitan el
+  desplazamiento que produce el cambio de tipografía, así que no hace falta
+  recurrir a `optional`.
 - **`index.html` es la página más pesada** (16 tarjetas, 23 fotos y galería):
-  su límite es el TBT en CPU ×4, no la red. Corridas repetidas dan **62–66**
-  (la varianza entre corridas de Lighthouse móvil es de ±4 puntos).
+  su límite es el TBT en CPU ×4, no la red. Corridas repetidas dan **83–84**
+  (la primera corrida en frío puede quedar en 70 por la compilación inicial
+  del motor).
 - **SEO no aparece en la tabla**: el audit `canonical` de Lighthouse 13.5 falla
   con `URL.parse is not a function` (bug de la herramienta, no del sitio) y
   `robots-txt` da `notApplicable` en local. Las 7 páginas **sí** declaran
@@ -161,6 +168,31 @@ Se activan por atributo en el HTML, así que cada página decide dónde aplicarl
 | `.card--studio` | Fotos de estudio con fondo claro: se atenúan y encienden al hover |
 | `.card__media::after` | Barrido neón al pasar el cursor sobre una tarjeta |
 | `.card__media`, `.cat__media`, `.split__media`, `.gallery__item` | **Lightbox**: la foto se abre en grande con zoom (bloque **16. LIGHTBOX**) |
+| `#chat-widget` | Chat de soporte flotante con base de conocimiento y respuestas rápidas (`js/chatbot.js` + bloque **18. CHAT WIDGET**, solo en `index.html`) |
+
+---
+
+## Correcciones para móvil (smartphone)
+
+Tres fallos detectados al probar con emulación táctil real (viewport 390 px, UA
+móvil, `hasTouch`) y corregidos:
+
+| Problema | Causa | Arreglo |
+|---|---|---|
+| Al tocar las fotos no se abría nada (en la portada) | El contenedor del chat flotante ocupaba ~350×640 px **con el panel oculto** y capturaba los toques de casi toda la pantalla: el `elementFromPoint` del centro de cada tarjeta devolvía `#chat-widget` | `pointer-events: none` en `.chat-widget`; solo el botón y el panel abierto reciben eventos |
+| Categorías y galería se veían en **blanco y negro** en táctil | El bloque que anula el `grayscale` cuando no hay hover estaba **antes** que las reglas base de `.cat__media` y `.gallery__item`; al compartir especificidad, ganaban por orden | El bloque táctil se movió al **final** de `styles.css`, con comentario para no volver a moverlo |
+| A 1024 px la última columna del pie se salía 14 px del borde | `sinergiaentextiles@gmail.com` es una palabra sin espacios de ~198 px y ensanchaba su columna | `min-width: 0` en `.footer__col` + `overflow-wrap: anywhere` en los enlaces del pie |
+
+**Verificación** (puppeteer + Chrome, emulación táctil):
+
+- 7 páginas × 390 px → **0 fotos en gris · 0 puntos de toque bloqueados (756
+  muestreados) · el lightbox abre en 6/6 páginas con fotos**.
+- El chat sigue operativo en móvil: el panel abre dentro del viewport, las
+  respuestas rápidas envían mensajes y cierra correctamente.
+- Barrido responsivo 7 páginas × 7 anchos (320 / 360 / 390 / 414 / 768 / 1024 /
+  1440 px) → **49/49 sin desborde horizontal**.
+- En escritorio (puntero fino) las fotos siguen en **blanco y negro por defecto
+  y pasan a color al pasar el cursor**, como en el diseño original.
 
 ---
 

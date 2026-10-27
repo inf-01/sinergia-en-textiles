@@ -1003,7 +1003,9 @@ body.nav-open { overflow: hidden; }
   gap: clamp(2rem, 4vw, 3rem);
 }
 
-.footer__col { display: grid; gap: 1.1rem; align-content: start; }
+/* min-width: 0 + overflow-wrap: anywhere -> el correo (palabra de ~198px sin
+   espacios) ensanchaba esta columna y se salía 14px del borde a 1024px */
+.footer__col { display: grid; gap: 1.1rem; align-content: start; min-width: 0; }
 .footer__title {
   font-family: var(--sans);
   font-size: var(--fs-label);
@@ -1016,6 +1018,7 @@ body.nav-open { overflow: hidden; }
 .footer__links a {
   font-size: var(--fs-small);
   color: var(--ink-soft);
+  overflow-wrap: anywhere;
   transition: color var(--t-fast) var(--ease), padding-left var(--t-fast) var(--ease);
 }
 .footer__links a:hover { color: var(--ink); padding-left: 6px; }
@@ -1403,38 +1406,6 @@ body.nav-open { overflow: hidden; }
 .card:hover .card__title { color: var(--ink); }
 .card__foot { color: var(--neon-a); text-shadow: 0 0 16px rgba(200, 255, 61, 0.35); }
 
-/* Táctil: imágenes a color, sin escala de grises (no hay hover en touch) */
-@media (hover: none), (pointer: coarse) {
-  .card__media img {
-    filter: grayscale(0) brightness(0.95) contrast(1.03) saturate(1.05);
-  }
-  .card--studio .card__media img,
-  .cat--studio .cat__media img {
-    filter: grayscale(0) brightness(0.92) contrast(1.05) saturate(1.05);
-  }
-  .cat__media img {
-    filter: grayscale(0) brightness(0.92) contrast(1.03) saturate(1.05);
-  }
-  .gallery__item img {
-    filter: grayscale(0) brightness(0.90) contrast(1.03);
-  }
-  /* Eliminar transform 3D para que el z-index funcione correctamente en touch */
-  .card,
-  .card:hover {
-    transform: none;
-    transform-style: flat;
-  }
-  .cat,
-  .cat:hover {
-    transform: none;
-    transform-style: flat;
-  }
-  /* Asegurar que .card__media reciba el toque sobre .card__link */
-  .card__media {
-    z-index: 5;
-    position: relative;
-  }
-}
 
 /* --- Hero: pieza única de producto + micro partículas --- */
 .hero { perspective: 1400px; }
@@ -1971,9 +1942,18 @@ body.nav-open { overflow: hidden; }
   flex-direction: column;
   align-items: flex-end;
   gap: 0.75rem;
+  /* El contenedor no captura toques: mientras el panel está oculto su caja
+     sigue ocupando ~350×640 px y se comía los toques de todo lo que había
+     debajo (en móvil no se abrían ni las fotos ni los botones).
+     Solo reciben eventos el botón y el panel abierto. */
+  pointer-events: none;
 }
 
 /* -- Botón toggle ------------------------------------------------ */
+.chat-toggle,
+.chat-panel.is-open {
+  pointer-events: auto;
+}
 .chat-toggle {
   position: relative;
   width: 58px;
@@ -2386,3 +2366,42 @@ body.nav-open { overflow: hidden; }
   .chat-quick { transition: none; }
 }
 
+/* ==========================================================================
+   TÁCTIL — ÚLTIMO BLOQUE DE FOTOS: NO MOVER DE AQUÍ
+   Anula los filtros en escala de grises cuando no hay hover (móvil/tablet).
+   Tiene que ser el último: las reglas base de .cat__media y de .gallery__item
+   viven más abajo que el resto del CSS y, al compartir especificidad, volvían
+   a dejar las fotos en B/N en pantallas táctiles.
+   ========================================================================== */
+/* Táctil: imágenes a color, sin escala de grises (no hay hover en touch) */
+@media (hover: none), (pointer: coarse) {
+  .card__media img {
+    filter: grayscale(0) brightness(0.95) contrast(1.03) saturate(1.05);
+  }
+  .card--studio .card__media img,
+  .cat--studio .cat__media img {
+    filter: grayscale(0) brightness(0.92) contrast(1.05) saturate(1.05);
+  }
+  .cat__media img {
+    filter: grayscale(0) brightness(0.92) contrast(1.03) saturate(1.05);
+  }
+  .gallery__item img {
+    filter: grayscale(0) brightness(0.90) contrast(1.03);
+  }
+  /* Eliminar transform 3D para que el z-index funcione correctamente en touch */
+  .card,
+  .card:hover {
+    transform: none;
+    transform-style: flat;
+  }
+  .cat,
+  .cat:hover {
+    transform: none;
+    transform-style: flat;
+  }
+  /* Asegurar que .card__media reciba el toque sobre .card__link */
+  .card__media {
+    z-index: 5;
+    position: relative;
+  }
+}
